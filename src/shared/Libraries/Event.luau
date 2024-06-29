@@ -24,14 +24,21 @@ if RunService:IsServer() then
     EventService._Remote.Name = "EventService"
     EventService._Remote.Parent = ReplicatedStorage
 
-    function EventService:FireAllClients(EventName, ...)
-        self._Remote:FireAllClients(EventName, ...)
+    function EventService:FireAllClients(...)
+        self._Remote:FireAllClients(...)
     end
 
-    function EventService:FireClient(Player, EventName, ...)
-        self._Remote:FireClient(Player, EventName, ...)
+    function EventService:FireClient(...)
+        self._Remote:FireClient(...)
     end
 
+    EventService._Remote.OnServerEvent:Connect(function(Player, EventName, ...)
+        if not EventService._Connections[EventName] then return end
+
+        for _, Callback in ipairs(EventService._Connections[EventName]) do
+            Callback(Player, ...)
+        end
+    end)
 else
     EventService._Remote = ReplicatedStorage:WaitForChild("EventService")
 
