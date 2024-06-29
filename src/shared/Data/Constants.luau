@@ -1,0 +1,5 @@
+return {
+    -- INTERACTION CONTROLLER
+    MAX_OBJECT_HOVER_DISTANCE = 100,
+
+}

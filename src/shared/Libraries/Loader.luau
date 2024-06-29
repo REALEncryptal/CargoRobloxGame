@@ -8,6 +8,7 @@ local Loader = {}
 
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 local Librarian = require(script.Parent.Librarian)
 
 function Loader:Start(Paths)
@@ -31,18 +32,37 @@ function Loader:Start(Paths)
     Loader:_RunFunctions(PathModules, "Init")
 
     -- If the module has a update function, bind it to the render step
+    local IsClient = RunService:IsClient()
+
     for _, Modules in ipairs(PathModules) do
         for _, Module in pairs(Modules) do
-            if not Module.Update then return end
+            if Module.Update then
             
-            -- Pass the connection to the update function so it can be disconnected
-            if RunService:IsClient() then
-                local Connection Connection = RunService.RenderStepped:Connect(function(DeltaTime)
-                    Module:Update(DeltaTime, Connection)
+                -- Pass the connection to the update function so it can be disconnected
+                if IsClient then
+                    local Connection Connection = RunService.RenderStepped:Connect(function(DeltaTime)
+                        Module:Update(DeltaTime, Connection)
+                    end)
+                else
+                    local Connection Connection = RunService.Heartbeat:Connect(function(DeltaTime)
+                        Module:Update(DeltaTime, Connection)
+                    end)
+                end
+            end
+
+            if Module.InputBegan and IsClient then
+                local Connection Connection = UserInputService.InputBegan:Connect(function(Input, Processed)
+                    if Processed then return end
+
+                    Module:InputBegan(Input, Processed, Connection)
                 end)
-            else
-                local Connection Connection = RunService.Heartbeat:Connect(function(DeltaTime)
-                    Module:Update(DeltaTime, Connection)
+            end
+
+            if Module.InputEnded and IsClient then
+                local Connection Connection = UserInputService.InputEnded:Connect(function(Input, Processed)
+                    if Processed then return end
+
+                    Module:InputEnded(Input, Processed, Connection)
                 end)
             end
         end
